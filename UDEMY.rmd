@@ -1,0 +1,91 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+#install.packages("skimr")
+library(skimr)
+require(tidyverse)
+library(tidyverse)
+library(gapminder)
+#install.packages("hablar")
+library(hablar)
+library(dplyr)
+#remove.packages(c("ggplot2", "data.table"))
+#install.packages('Rcpp', dependencies = TRUE)
+#install.packages('ggplot2', dependencies = TRUE)
+#install.packages('data.table', dependencies = TRUE)
+library(ggplot2)
+library(dplyr)
+#install.packages("zoo")
+library(zoo)
+#install.packages("writexl")
+library(writexl)
+#install.packages("see")
+
+```
+
+```{r}
+Udemy<-read_csv("C:/Users/Lenovo/Downloads/Latest_udemy_dataset.csv")
+```
+
+```{r}
+glimpse(Udemy)
+```
+
+```{r}
+skim(Udemy)
+```
+
+```{r}
+Udemy_NEW <- Udemy %>%
+  arrange((created_at)) %>%
+  group_by(instructors) %>%
+  mutate(Prof_prior_rating=rollmean(rating,2, na.pad=TRUE, align="right"))
+Udemy_NEW$Prof_prior_rating <- round(Udemy_NEW$Prof_prior_rating,2)
+Udemy_NEW
+
+```
+
+```{r}
+Udemy_NEW2 <- Udemy_NEW %>%
+  filter(Prof_prior_rating!="NA")
+ggplot(data = Udemy_NEW2,  mapping = aes(x = Prof_prior_rating,  color = category)) +
+  geom_histogram(binwidth = 0.3)+ geom_density(alpha = 0.7)+
+  facet_wrap(~category)
+```
+
+```{r}
+ggplot(data =Udemy_NEW2,
+       mapping = aes(x = Prof_prior_rating,
+                     y = content_info)) +
+ geom_point() +
+  labs(title = "Course content Vs Rating .",
+       x = "Prior Professor Rating", y = "Content")
+```
+
+```{r}
+Udemy_NEW3 <- Udemy_NEW2 %>%
+   filter(Prof_prior_rating!="NA")
+ggplot(data = Udemy_NEW2, aes(x = Prof_prior_rating, color = is_paid)) +
+  geom_histogram(binwidth = 0.2)+ geom_density(alpha = 0.7)+
+  facet_wrap(~is_paid)
+
+```
+
+```{r}
+Udemy_NEW2 <- Udemy_NEW %>%
+  filter(Prof_prior_rating!="NA")
+mymodel=lm(num_reviews ~ content_info+Prof_prior_rating+num_subscribers+rating , data=Udemy_NEW2)
+summary(mymodel)
+```
+
+```{r}
+fit <- lm(mymodel, Udemy_NEW2)
+fit
+anova(fit)
+plot(fit)
+confint(mymodel)
+```
